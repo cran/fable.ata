@@ -1,0 +1,17 @@
+231d13d4940402811034433e6ad954ab *DESCRIPTION
+56701f2abe1b74edb7500759153e4e75 *NAMESPACE
+155840d4df743f5c71ba9a679af033ff *R/fable.ata-package.R
+29ef6c59c8439619413acf3fc2477c1b *R/fable_ata.R
+01b5a7a09d9d2eaab832dc8e03255df1 *R/utils.R
+3d6bfc9873bb4cdef66f27ed4b7de4ab *README.md
+0f57aa11cf7f026aee1d9ec0a38edf5f *man/AutoATA.Rd
+a089e979ec2dd1843b6b4d4399453cd4 *man/components.ATA.Rd
+bbf5aa98d50aceca525d6b6198624f8b *man/fable.ata-package.Rd
+b2428b4abc21f1478acb9e24044a20cd *man/fitted.ATA.Rd
+1d4527c96376dcdb49be0acb3851440e *man/forecast.ATA.Rd
+04b1b39c8749fe0adbf604adbc391a73 *man/format.ATA.Rd
+8d1b79daa4f45832d4b6b03be18a57ae *man/glance.ATA.Rd
+26b2f6d11340f597976afc5e841d1f14 *man/model_sum.ATA.Rd
+658e55fc5113bd132cff37311b2113e7 *man/report.ATA.Rd
+4da1f467b7b13ae387ee71ad0365cbfe *man/residuals.ATA.Rd
+74dbf338922c3867443cb570b8a508dc *man/tidy.ATA.Rd
