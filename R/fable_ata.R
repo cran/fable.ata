@@ -7,7 +7,9 @@
 #' @importFrom rlang expr_text
 #' @importFrom stats frequency ts start
 #' @importFrom fabletools get_frequencies
+#' @importFrom tsbox ts_ts ts_tsibble
 #' @importFrom dplyr ungroup
+#' @importFrom lubridate decimal_date
 #'
 train_ata <- function(.data, specials, ...){
   if(length(tsibble::measured_vars(.data)) > 1){
@@ -25,17 +27,22 @@ train_ata <- function(.data, specials, ...){
 
   # Prepare data for modelling
   model_data <- tsibble::as_tibble(.data)[c(rlang::expr_text(tsibble::index(.data)), tsibble::measured_vars(.data))]
-  colnames(model_data) <- c("ds", "y")
+  colnames(model_data) <- c("idy", "y")
   if (any(is.na(model_data$y))) {
     stop("ATA method does not support missing values.")
   }
   if (!is.null(season$period)){
     period <- season$period
   }else {
-    period <- fabletools::get_frequencies(season$period, .data, .auto = "largest")
+    period <- fabletools::get_frequencies(season$period, .data, .auto = "smallest")
   }
-  pre_data <- quietly(tsbox::ts_ts)(.data)
-  train_data <- stats::ts(model_data$y, start=start(pre_data), frequency = max(unname(period)))
+  pre_data <- safely(quietly(tsbox::ts_ts))(.data)
+  if (!is.null(pre_data$result)){
+    train_data <- stats::ts(model_data$y, start = start(pre_data), frequency = max(unname(period)))
+  }else{
+    pre_data <- safely(quietly(tsbox::ts_tsibble))(.data)
+    train_data <- stats::ts(model_data$y, start = lubridate::decimal_date(pre_data[[1]][[1]][1]), frequency = period)
+  }
   if (holdout$holdout == TRUE & accuracy$criteria == "AMSE") {
     stop("ATA Method does not support 'AMSE' for 'holdout' forecasting.")
   }
@@ -137,7 +144,7 @@ specials_ata <- fabletools::new_specials(
                    list("parP" = parP, "level_fixed" = level_fixed, "initial_level" = initial_level)
                   },
    trend = function(type = "A", parQ = NULL, initial_trend = FALSE, trend_opt = "none",
-                    parPHI = NULL, parPHI_range = c(0.8, 1.0), parPHI_increment = 0.01,
+                    parPHI = NULL, parPHI_range = c(0.0, 1.0), parPHI_increment = 0.05,
                     uroot_test = "adf", uroot_alpha = 0.05, uroot_type = "level", uroot_maxd = 2)
                    {
                      if (type == "N"){
@@ -167,10 +174,10 @@ specials_ata <- fabletools::new_specials(
                   },
    accuracy = function(criteria = "sMAPE", nmse = 3, ic = "AIC")
                     {
-                       if (nmse > 30 & criteria == "AMSE") {
+                       if (nmse > 30 & (criteria == "AMSE" | criteria == "GAMSE")) {
                          nmse <- 30
                          warning("'nmse' must be less than 30. 'nmse' is set to 30.")
-                       }else if ((is.null(nmse) | nmse <= 1) & criteria == "AMSE") {
+                       }else if ((is.null(nmse) | nmse <= 1) & (criteria == "AMSE" | criteria == "GAMSE")) {
                          nmse <- 3
                          warning("'nmse' must be greater than 1. 'nmse' is set to 3.")
                        }else{
@@ -429,7 +436,7 @@ residuals.ATA <- function(object, ...){
 #' @param ... Unused.
 #'
 #' @return A [fabletools::dable()] containing estimated states.
-#'   
+#'
 #' @importFrom fabletools as_dable
 #' @importFrom rlang sym expr list2 ":="
 #' @importFrom tsibble measured_vars index
